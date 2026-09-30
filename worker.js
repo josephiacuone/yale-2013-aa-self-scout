@@ -67,46 +67,55 @@ function copyRatings(target, source, keys) {
 }
 
 async function getBootstrap(env, sessionId) {
-  const playerQuery =
-    "?pageSize=100&filterByFormula=" +
-    encodeURIComponent("{Active}=1") +
-    "&sort%5B0%5D%5Bfield%5D=Player%20Name&sort%5B0%5D%5Bdirection%5D=asc";
-
-  const playersData = await airtableFetch(env, PLAYERS_TABLE, playerQuery);
-  const players = (playersData.records || []).map((r) => ({
-    id: r.id,
-    name: r.fields?.["Player Name"] || "",
-    position: r.fields?.["Position"] || "",
-    jersey: r.fields?.["Jersey #"] ?? null,
-  }));
-
-  let session = null;
-  if (sessionId) {
-    if (!/^rec[A-Za-z0-9]{14}$/.test(sessionId)) throw new Error("Invalid session id");
-    const r = await airtableFetch(env, SESSIONS_TABLE, `/${sessionId}`);
-    session = {
+  if (!sessionId || !/^rec[A-Za-z0-9]{14}$/.test(sessionId)) {
+    throw new Error("This link is missing a valid session.");
+  }
+  const r = await airtableFetch(env, SESSIONS_TABLE, `/${sessionId}`);
+  return {
+    session: {
       id: r.id,
       label: r.fields?.["Session"] || "",
       date: r.fields?.["Date"] || "",
       type: r.fields?.["Session Type"] || "",
       opponent: r.fields?.["Opponent / Session"] || "",
-    };
+    },
+  };
+}
+
+async function resolvePlayer(env, playerName, role) {
+  const name = String(playerName || "").trim();
+  if (!name) throw new Error("Enter your full name.");
+
+  const formula = `AND({Active}=1,LOWER({Player Name})=LOWER(${JSON.stringify(name)}))`;
+  const query =
+    "?pageSize=2&filterByFormula=" + encodeURIComponent(formula);
+
+  const data = await airtableFetch(env, PLAYERS_TABLE, query);
+  const matches = data.records || [];
+  if (matches.length !== 1) {
+    throw new Error("Player name was not found on the active roster. Enter your name exactly as listed.");
   }
 
-  return { players, session };
+  const record = matches[0];
+  const rosterRole = record.fields?.["Position"] || "";
+  if (rosterRole !== role) {
+    throw new Error(`The selected position does not match the roster for ${record.fields?.["Player Name"] || name}.`);
+  }
+
+  return record;
 }
 
 async function createReview(env, payload) {
-  const playerId = payload?.playerId;
   const sessionId = payload?.sessionId;
   const role = payload?.role;
 
-  if (!/^rec[A-Za-z0-9]{14}$/.test(playerId || "")) throw new Error("Choose a valid player.");
   if (!/^rec[A-Za-z0-9]{14}$/.test(sessionId || "")) throw new Error("This form is missing a valid session.");
   if (!["Forward", "Defense", "Goaltender"].includes(role)) throw new Error("Choose a valid role.");
 
+  const player = await resolvePlayer(env, payload?.playerName, role);
+
   const fields = {
-    "Player": [playerId],
+    "Player": [player.id],
     "Role": role,
     "Session": [sessionId],
     "Shifts / Period Reviewed": String(payload?.shifts || "").trim(),
