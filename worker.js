@@ -118,6 +118,37 @@ async function resolvePlayer(env, playerId, role) {
   return record;
 }
 
+
+async function findExistingReview(env, playerId, sessionId) {
+  let offset = "";
+  do {
+    const params = new URLSearchParams();
+    params.set("pageSize", "100");
+    params.append("fields[]", "Player");
+    params.append("fields[]", "Session");
+    params.append("fields[]", "Exclude from Reporting");
+    params.set("filterByFormula", "NOT({Exclude from Reporting})");
+    if (offset) params.set("offset", offset);
+
+    const data = await airtableFetch(
+      env,
+      REVIEWS_TABLE,
+      "?" + params.toString()
+    );
+
+    const match = (data.records || []).find((record) => {
+      const players = record.fields?.["Player"] || [];
+      const sessions = record.fields?.["Session"] || [];
+      return players.includes(playerId) && sessions.includes(sessionId);
+    });
+
+    if (match) return match;
+    offset = data.offset || "";
+  } while (offset);
+
+  return null;
+}
+
 async function createReview(env, payload) {
   const sessionId = payload?.sessionId;
   const role = payload?.role;
@@ -126,6 +157,11 @@ async function createReview(env, payload) {
   if (!["Forward", "Defense", "Goaltender"].includes(role)) throw new Error("Choose a valid role.");
 
   const player = await resolvePlayer(env, payload?.playerId, role);
+
+  const existing = await findExistingReview(env, player.id, sessionId);
+  if (existing) {
+    throw new Error("You already submitted a self-scout for this session.");
+  }
 
   const fields = {
     "Player": [player.id],
