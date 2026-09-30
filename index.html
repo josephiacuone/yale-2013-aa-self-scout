@@ -128,14 +128,8 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-player">
 <div class="form-wrap" id="p-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><input type="text" id="p-player" placeholder="First Last" autocomplete="name"></div>
-    <div class="field"><label>Position</label>
-      <select id="p-role">
-        <option value="">Select...</option>
-        <option value="Forward">Forward</option>
-        <option value="Defense">Defense</option>
-      </select>
-    </div>
+    <div class="field"><label>Your Name</label><select id="p-player"><option value="">Loading roster...</option></select></div>
+    <div class="field"><label>Position</label><input type="text" id="p-role" readonly placeholder="Select your name">
     <div class="field"><label>Date</label><input type="text" id="p-date" readonly></div>
     <div class="field"><label>Opponent / Session</label><input type="text" id="p-opponent" readonly></div>
     <div class="field" style="grid-column:1/-1"><label>Shifts / Period Reviewed</label><input type="text" id="p-shifts" placeholder="e.g. P1, shifts 3-5"></div>
@@ -211,7 +205,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-goalie" class="hidden">
 <div class="form-wrap" id="g-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><input type="text" id="g-player" placeholder="First Last" autocomplete="name"></div>
+    <div class="field"><label>Your Name</label><select id="g-player"><option value="">Loading roster...</option></select></div>
     <div class="field"><label>Date</label><input type="text" id="g-date" readonly></div>
     <div class="field"><label>Opponent / Session</label><input type="text" id="g-opponent" readonly></div>
     <div class="field"><label>Period(s) Reviewed</label><input type="text" id="g-periods" placeholder="e.g. P1, P2"></div>
@@ -269,6 +263,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 const API_BASE = "https://yale-self-scout-api.joseph-iacuone.workers.dev";
 const SESSION_ID = new URLSearchParams(window.location.search).get("session") || "";
 let SESSION = null;
+let PLAYERS = [];
 
 const PQ = {
   general:[
@@ -446,6 +441,30 @@ async function api(path, options = {}) {
   return data;
 }
 
+function populatePlayerLists() {
+  const playerSelect = document.getElementById("p-player");
+  const goalieSelect = document.getElementById("g-player");
+  const option = (p) => {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = p.name;
+    o.dataset.role = p.position;
+    return o;
+  };
+
+  playerSelect.innerHTML = '<option value="">Select your name...</option>';
+  PLAYERS.filter(p => p.position !== "Goaltender").forEach(p => playerSelect.appendChild(option(p)));
+
+  goalieSelect.innerHTML = '<option value="">Select your name...</option>';
+  PLAYERS.filter(p => p.position === "Goaltender").forEach(p => goalieSelect.appendChild(option(p)));
+
+  playerSelect.addEventListener("change", () => {
+    const p = PLAYERS.find(x => x.id === playerSelect.value);
+    document.getElementById("p-role").value = p?.position || "";
+    setPositionVisibility();
+  });
+}
+
 async function loadSession() {
   if (!SESSION_ID) {
     document.getElementById("p-btn").disabled = true;
@@ -456,6 +475,8 @@ async function loadSession() {
   try {
     const data = await api("/bootstrap?session=" + encodeURIComponent(SESSION_ID));
     SESSION = data.session;
+    PLAYERS = data.players || [];
+    populatePlayerLists();
     ["p-date","g-date"].forEach(id => document.getElementById(id).value = SESSION?.date || "");
     ["p-opponent","g-opponent"].forEach(id => document.getElementById(id).value = SESSION?.opponent || SESSION?.label || "");
     document.getElementById("p-session-type").value = SESSION?.type || "";
@@ -469,10 +490,11 @@ async function loadSession() {
 // ── Player submit ─────────────────────────────────────────────────────────────
 async function submitPlayer() {
   const btn = document.getElementById("p-btn");
-  const playerName = document.getElementById("p-player").value.trim();
+  const playerId = document.getElementById("p-player").value;
   const role = document.getElementById("p-role").value;
-  if (!playerName) { toast("Please enter your full name"); return; }
-  if (!role) { toast("Please select Forward or Defense"); return; }
+  const playerName = PLAYERS.find(p => p.id === playerId)?.name || "";
+  if (!playerId) { toast("Please select your name"); return; }
+  if (!role) { toast("Your position could not be determined"); return; }
 
   const ratings = {
     ...collectRatingMap("p-general", "p", ["GH01","GH02","GH03","GH04","GH05","GH06","GH07","GH08","GH09"]),
@@ -485,7 +507,7 @@ async function submitPlayer() {
   const vs = document.querySelector("input[name='p-vs']:checked")?.value || "";
   const payload = {
     sessionId: SESSION_ID,
-    playerName,
+    playerId,
     role,
     shifts: document.getElementById("p-shifts").value.trim(),
     helios: {
@@ -521,8 +543,8 @@ async function submitPlayer() {
 // ── Goalie submit ─────────────────────────────────────────────────────────────
 async function submitGoalie() {
   const btn = document.getElementById("g-btn");
-  const playerName = document.getElementById("g-player").value.trim();
-  if (!playerName) { toast("Please enter your full name"); return; }
+  const playerId = document.getElementById("g-player").value;
+  if (!playerId) { toast("Please select your name"); return; }
 
   const ratings = {
     ...collectRatingMap("g-general", "g", ["GG01","GG02","GG03","GG04","GG05","GG06"]),
@@ -532,7 +554,7 @@ async function submitGoalie() {
 
   const payload = {
     sessionId: SESSION_ID,
-    playerName,
+    playerId,
     role: "Goaltender",
     shifts: document.getElementById("g-periods").value.trim(),
     ratings,
