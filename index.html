@@ -128,10 +128,17 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-player">
 <div class="form-wrap" id="p-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><input type="text" id="p-player" placeholder="First Last"></div>
-    <div class="field"><label>Date</label><input type="date" id="p-date"></div>
-    <div class="field"><label>Opponent / Session</label><input type="text" id="p-opponent" placeholder="e.g. East Haven"></div>
-    <div class="field"><label>Shifts / Period Reviewed</label><input type="text" id="p-shifts" placeholder="e.g. P1, shifts 3-5"></div>
+    <div class="field"><label>Your Name</label><input type="text" id="p-player" placeholder="First Last" autocomplete="name"></div>
+    <div class="field"><label>Position</label>
+      <select id="p-role">
+        <option value="">Select...</option>
+        <option value="Forward">Forward</option>
+        <option value="Defense">Defense</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="text" id="p-date" readonly></div>
+    <div class="field"><label>Opponent / Session</label><input type="text" id="p-opponent" readonly></div>
+    <div class="field" style="grid-column:1/-1"><label>Shifts / Period Reviewed</label><input type="text" id="p-shifts" placeholder="e.g. P1, shifts 3-5"></div>
   </div>
 
   <div class="instruction">
@@ -143,13 +150,11 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div class="section-hdr">HELIOS Check</div>
   <div class="helios-box">
     <div class="info-grid" style="margin-bottom:10px;">
-      <div class="field"><label>Session Type</label>
-        <select id="p-session-type"><option value="">Select...</option>
-          <option>Practice</option><option>Game</option><option>Skills</option></select></div>
-      <div class="field"><label>Hustle Score</label><input type="number" id="p-hustle" min="1" max="99" placeholder="e.g. 63"></div>
-      <div class="field"><label>Load</label><input type="text" id="p-load" placeholder="e.g. 74"></div>
+      <div class="field"><label>Session Type</label><input type="text" id="p-session-type" readonly></div>
+      <div class="field"><label>Hustle Score</label><input type="number" id="p-hustle" min="0" step="1" placeholder="e.g. 63"></div>
+      <div class="field"><label>Load</label><input type="number" id="p-load" step="any" placeholder="e.g. 74"></div>
       <div class="field"><label>Stride Time</label><input type="text" id="p-stride" placeholder="e.g. 13:05"></div>
-      <div class="field" style="grid-column:1/-1"><label>Energy Ratio</label><input type="text" id="p-energy" placeholder="e.g. 56%"></div>
+      <div class="field" style="grid-column:1/-1"><label>Energy Ratio (%)</label><input type="number" id="p-energy" min="0" max="100" step="any" placeholder="e.g. 56"></div>
     </div>
     <div class="field" style="margin-bottom:8px;"><label>What does the data suggest?</label><textarea id="p-data-suggest" rows="2"></textarea></div>
     <div style="font-size:12px;margin-bottom:5px;font-weight:bold;color:var(--navy);">Does the video support the data?</div>
@@ -170,11 +175,15 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div class="section-hdr">With the Puck</div>
   <table class="rating-table" id="p-puck"></table>
 
-  <div class="section-hdr gold">Forwards Only</div>
-  <table class="rating-table" id="p-fwd"></table>
+  <div id="p-fwd-section" class="hidden">
+    <div class="section-hdr gold">Forwards Only</div>
+    <table class="rating-table" id="p-fwd"></table>
+  </div>
 
-  <div class="section-hdr gold">Defensemen Only</div>
-  <table class="rating-table" id="p-def"></table>
+  <div id="p-def-section" class="hidden">
+    <div class="section-hdr gold">Defensemen Only</div>
+    <table class="rating-table" id="p-def"></table>
+  </div>
 
   <div class="section-hdr" style="margin-top:20px;">Reflection</div>
   <div style="background:#fff;border:1px solid var(--border);padding:12px;">
@@ -190,11 +199,10 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 
 <div class="confirm-screen" id="p-confirm">
   <div class="confirm-card">
-    <h2>Ready to send!</h2>
-    <p>Your self-scout will open in your email app, pre-filled and ready to go. Just hit <strong>Send</strong>.</p>
-    <div class="email-note">Sending to: Coach Gallini</div>
-    <a id="p-mailto-link" href="#" class="send-btn">Open Email App &rarr;</a>
-    <button class="reset-btn" onclick="resetPlayer()">Go back and edit</button>
+    <h2>Self-scout saved!</h2>
+    <p>Your review has been securely saved to the team database.</p>
+    <div class="email-note" id="p-confirm-note">Thanks for completing your review.</div>
+    <button class="send-btn" onclick="window.location.reload()">Submit another review</button>
   </div>
 </div>
 </div>
@@ -203,9 +211,9 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-goalie" class="hidden">
 <div class="form-wrap" id="g-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><input type="text" id="g-player" placeholder="First Last"></div>
-    <div class="field"><label>Date</label><input type="date" id="g-date"></div>
-    <div class="field"><label>Opponent</label><input type="text" id="g-opponent" placeholder="e.g. East Haven"></div>
+    <div class="field"><label>Your Name</label><input type="text" id="g-player" placeholder="First Last" autocomplete="name"></div>
+    <div class="field"><label>Date</label><input type="text" id="g-date" readonly></div>
+    <div class="field"><label>Opponent / Session</label><input type="text" id="g-opponent" readonly></div>
     <div class="field"><label>Period(s) Reviewed</label><input type="text" id="g-periods" placeholder="e.g. P1, P2"></div>
   </div>
 
@@ -247,11 +255,10 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 
 <div class="confirm-screen" id="g-confirm">
   <div class="confirm-card">
-    <h2>Ready to send!</h2>
-    <p>Your self-scout will open in your email app, pre-filled and ready to go. Just hit <strong>Send</strong>.</p>
-    <div class="email-note">Sending to: Coach Gallini</div>
-    <a id="g-mailto-link" href="#" class="send-btn">Open Email App &rarr;</a>
-    <button class="reset-btn" onclick="resetGoalie()">Go back and edit</button>
+    <h2>Self-scout saved!</h2>
+    <p>Your review has been securely saved to the team database.</p>
+    <div class="email-note" id="g-confirm-note">Thanks for completing your review.</div>
+    <button class="send-btn" onclick="window.location.reload()">Submit another review</button>
   </div>
 </div>
 </div>
@@ -259,7 +266,9 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div class="toast" id="toast"></div>
 
 <script>
-const COACH_EMAIL = "brian.gallini@quinnipiac.edu";
+const API_BASE = "https://REPLACE-WITH-YOUR-WORKER.workers.dev";
+const SESSION_ID = new URLSearchParams(window.location.search).get("session") || "";
+let SESSION = null;
 
 const PQ = {
   general:[
@@ -393,149 +402,159 @@ function getGoalBlocks() {
   return lines.length ? lines.join("\n") : "  None recorded";
 }
 
-function buildMailto(subject, body) {
-  return `mailto:${COACH_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+// ── Airtable submission helpers ──────────────────────────────────────────────
+function collectRatingMap(id, pfx, codes) {
+  const out = {};
+  codes.forEach((code, i) => {
+    const selected = document.querySelector(`input[name="${pfx}-${id}-${i}"]:checked`);
+    if (selected) out[code] = selected.value;
+  });
+  return out;
+}
+
+function collectGoalPayload() {
+  const out = [];
+  for (let g=1; g<=4; g++) {
+    const value = (q) => document.querySelector(`input[name="gg${g}q${q}"]:checked`)?.value || "";
+    out.push({
+      visible: value(0),
+      set: value(1),
+      position: value(2),
+      saveable: value(3),
+      different: document.getElementById(`ggoal${g}notes`)?.value?.trim() || "",
+    });
+  }
+  return out;
+}
+
+function setPositionVisibility() {
+  const role = document.getElementById("p-role").value;
+  document.getElementById("p-fwd-section").classList.toggle("hidden", role !== "Forward");
+  document.getElementById("p-def-section").classList.toggle("hidden", role !== "Defense");
+}
+
+async function api(path, options = {}) {
+  if (API_BASE.includes("REPLACE-WITH-YOUR-WORKER")) {
+    throw new Error("The database connection has not been configured yet.");
+  }
+  const response = await fetch(API_BASE + path, {
+    ...options,
+    headers: {"Content-Type":"application/json", ...(options.headers || {})},
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Unable to save the review.");
+  return data;
+}
+
+async function loadSession() {
+  if (!SESSION_ID) {
+    document.getElementById("p-btn").disabled = true;
+    document.getElementById("g-btn").disabled = true;
+    toast("This link is missing its session. Please use the session-specific link.", 7000);
+    return;
+  }
+  try {
+    const data = await api("/bootstrap?session=" + encodeURIComponent(SESSION_ID));
+    SESSION = data.session;
+    ["p-date","g-date"].forEach(id => document.getElementById(id).value = SESSION?.date || "");
+    ["p-opponent","g-opponent"].forEach(id => document.getElementById(id).value = SESSION?.opponent || SESSION?.label || "");
+    document.getElementById("p-session-type").value = SESSION?.type || "";
+  } catch (err) {
+    document.getElementById("p-btn").disabled = true;
+    document.getElementById("g-btn").disabled = true;
+    toast(err.message, 7000);
+  }
 }
 
 // ── Player submit ─────────────────────────────────────────────────────────────
-function submitPlayer() {
-  const player = document.getElementById("p-player").value.trim();
-  if (!player) { toast("Please enter your name"); return; }
+async function submitPlayer() {
+  const btn = document.getElementById("p-btn");
+  const playerName = document.getElementById("p-player").value.trim();
+  const role = document.getElementById("p-role").value;
+  if (!playerName) { toast("Please enter your full name"); return; }
+  if (!role) { toast("Please select Forward or Defense"); return; }
 
-  const date    = document.getElementById("p-date").value || "—";
-  const opp     = document.getElementById("p-opponent").value || "—";
-  const shifts  = document.getElementById("p-shifts").value || "—";
-  const stype   = document.getElementById("p-session-type").value || "—";
-  const hustle  = document.getElementById("p-hustle").value || "—";
-  const load    = document.getElementById("p-load").value || "—";
-  const stride  = document.getElementById("p-stride").value || "—";
-  const energy  = document.getElementById("p-energy").value || "—";
-  const dataSug = document.getElementById("p-data-suggest").value || "—";
-  const vs      = document.querySelector("input[name=\'p-vs\']:checked")?.value || "—";
-  const vsWhy   = document.getElementById("p-video-why").value || "—";
-  const r1      = document.getElementById("p-r1").value || "—";
-  const r2      = document.getElementById("p-r2").value || "—";
-  const r3      = document.getElementById("p-r3").value || "—";
+  const ratings = {
+    ...collectRatingMap("p-general", "p", ["GH01","GH02","GH03","GH04","GH05","GH06","GH07","GH08","GH09"]),
+    ...collectRatingMap("p-puck", "p", ["WP01","WP02","WP03","WP04","WP05"]),
+    ...(role === "Forward"
+      ? collectRatingMap("p-fwd", "p", ["F01","F02","F03","F04"])
+      : collectRatingMap("p-def", "p", ["D01","D02","D03","D04","D05"])),
+  };
 
-  const subject = `[Self-Scout] ${player} — ${opp} — ${date}`;
-  const body = [
-    "YALE 2013 AA — PLAYER SELF-SCOUT",
-    "═══════════════════════════════",
-    `Player:   ${player}`,
-    `Date:     ${date}`,
-    `Opponent: ${opp}`,
-    `Shifts:   ${shifts}`,
-    `Session:  ${stype}`,
-    "",
-    "── HELIOS ──────────────────────",
-    `Hustle Score:  ${hustle}`,
-    `Load:          ${load}`,
-    `Stride Time:   ${stride}`,
-    `Energy Ratio:  ${energy}`,
-    `Data suggests: ${dataSug}`,
-    `Video supports data? ${vs}`,
-    `Why: ${vsWhy}`,
-    "",
-"",
-"GENERAL HABITS",
-"==============",
-"",
-getRating("p-general", PQ.general, "p"),
+  const vs = document.querySelector("input[name='p-vs']:checked")?.value || "";
+  const payload = {
+    sessionId: SESSION_ID,
+    playerName,
+    role,
+    shifts: document.getElementById("p-shifts").value.trim(),
+    helios: {
+      hustle: document.getElementById("p-hustle").value,
+      load: document.getElementById("p-load").value,
+      stride: document.getElementById("p-stride").value.trim(),
+      energy: document.getElementById("p-energy").value,
+      dataSuggests: document.getElementById("p-data-suggest").value.trim(),
+      videoSupports: vs,
+      why: document.getElementById("p-video-why").value.trim(),
+    },
+    ratings,
+    reflection: {
+      didWell: document.getElementById("p-r1").value.trim(),
+      improveHabit: document.getElementById("p-r2").value.trim(),
+      nextHabit: document.getElementById("p-r3").value.trim(),
+    },
+  };
 
-"",
-"WITH THE PUCK",
-"=============",
-"",
-getRating("p-puck", PQ.puck, "p"),
-
-"",
-"FORWARDS ONLY",
-"=============",
-"",
-getRating("p-fwd", PQ.fwd, "p"),
-
-"",
-"DEFENSEMEN ONLY",
-"===============",
-"",
-getRating("p-def", PQ.def, "p"),
-
-"",
-"REFLECTION",
-"==========",
-"",
-    `One thing I did well:`,
-    `  ${r1}`,
-    "",
-    `One habit I want to improve:`,
-    `  ${r2}`,
-    "",
-    `Focus for next session:`,
-    `  ${r3}`,
-  ].join("\n");
-
-  document.getElementById("p-mailto-link").href = buildMailto(subject, body);
-  document.getElementById("p-form").classList.add("hidden");
-  document.getElementById("p-confirm").style.display = "block";
-}
-
-function resetPlayer() {
-  document.getElementById("p-confirm").style.display = "none";
-  document.getElementById("p-form").classList.remove("hidden");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+  try {
+    await api("/submit", {method:"POST", body:JSON.stringify(payload)});
+    document.getElementById("p-form").classList.add("hidden");
+    document.getElementById("p-confirm").style.display = "block";
+  } catch (err) {
+    toast(err.message, 7000);
+    btn.disabled = false;
+    btn.textContent = "Review & Submit";
+  }
 }
 
 // ── Goalie submit ─────────────────────────────────────────────────────────────
-function submitGoalie() {
-  const player = document.getElementById("g-player").value.trim();
-  if (!player) { toast("Please enter your name"); return; }
+async function submitGoalie() {
+  const btn = document.getElementById("g-btn");
+  const playerName = document.getElementById("g-player").value.trim();
+  if (!playerName) { toast("Please enter your full name"); return; }
 
-  const date    = document.getElementById("g-date").value || "—";
-  const opp     = document.getElementById("g-opponent").value || "—";
-  const periods = document.getElementById("g-periods").value || "—";
-  const r1      = document.getElementById("g-r1").value || "—";
-  const r2      = document.getElementById("g-r2").value || "—";
-  const r3      = document.getElementById("g-r3").value || "—";
+  const ratings = {
+    ...collectRatingMap("g-general", "g", ["GG01","GG02","GG03","GG04","GG05","GG06"]),
+    ...collectRatingMap("g-pos", "g", ["GP01","GP02","GP03","GP04","GP05"]),
+    ...collectRatingMap("g-puck", "g", ["GM01","GM02","GM03"]),
+  };
 
-  const subject = `[Self-Scout] ${player} (G) — ${opp} — ${date}`;
-  const body = [
-    "YALE 2013 AA — GOALTENDER SELF-SCOUT",
-    "═════════════════════════════════════",
-    `Player:  ${player}`,
-    `Date:    ${date}`,
-    `Opponent: ${opp}`,
-    `Periods: ${periods}`,
-    "",
-    "── GENERAL HABITS ──────────────",
-    getRating("g-general", GQ.general, "g"),
-    "",
-    "── POSITIONING ─────────────────",
-    getRating("g-pos", GQ.pos, "g"),
-    "",
-    "── PUCK MANAGEMENT ─────────────",
-    getRating("g-puck", GQ.puck, "g"),
-    "",
-    "── GOALS AGAINST ───────────────",
-    getGoalBlocks(),
-    "",
-    "── REFLECTION ──────────────────",
-    `One thing I did well:`,
-    `  ${r1}`,
-    "",
-    `One habit I want to improve:`,
-    `  ${r2}`,
-    "",
-    `Focus for next session:`,
-    `  ${r3}`,
-  ].join("\n");
+  const payload = {
+    sessionId: SESSION_ID,
+    playerName,
+    role: "Goaltender",
+    shifts: document.getElementById("g-periods").value.trim(),
+    ratings,
+    goals: collectGoalPayload(),
+    reflection: {
+      didWell: document.getElementById("g-r1").value.trim(),
+      improveHabit: document.getElementById("g-r2").value.trim(),
+      nextHabit: document.getElementById("g-r3").value.trim(),
+    },
+  };
 
-  document.getElementById("g-mailto-link").href = buildMailto(subject, body);
-  document.getElementById("g-form").classList.add("hidden");
-  document.getElementById("g-confirm").style.display = "block";
-}
-
-function resetGoalie() {
-  document.getElementById("g-confirm").style.display = "none";
-  document.getElementById("g-form").classList.remove("hidden");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+  try {
+    await api("/submit", {method:"POST", body:JSON.stringify(payload)});
+    document.getElementById("g-form").classList.add("hidden");
+    document.getElementById("g-confirm").style.display = "block";
+  } catch (err) {
+    toast(err.message, 7000);
+    btn.disabled = false;
+    btn.textContent = "Review & Submit";
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -548,9 +567,9 @@ function resetGoalie() {
   buildTable("g-pos",     GQ.pos,     "g");
   buildTable("g-puck",    GQ.puck,    "g");
   buildGoals();
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("p-date").value = today;
-  document.getElementById("g-date").value = today;
+  document.getElementById("p-role").addEventListener("change", setPositionVisibility);
+  setPositionVisibility();
+  loadSession();
 })();
 </script>
 </body>
