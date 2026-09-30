@@ -70,7 +70,24 @@ async function getBootstrap(env, sessionId) {
   if (!sessionId || !/^rec[A-Za-z0-9]{14}$/.test(sessionId)) {
     throw new Error("This link is missing a valid session.");
   }
-  const r = await airtableFetch(env, SESSIONS_TABLE, `/${sessionId}`);
+  const [r, roster] = await Promise.all([
+    airtableFetch(env, SESSIONS_TABLE, `/${sessionId}`),
+    airtableFetch(
+      env,
+      PLAYERS_TABLE,
+      "?pageSize=100&filterByFormula=" + encodeURIComponent("({Active}=1)")
+    ),
+  ]);
+
+  const players = (roster.records || [])
+    .map((record) => ({
+      id: record.id,
+      name: record.fields?.["Player Name"] || "",
+      position: record.fields?.["Position"] || "",
+    }))
+    .filter((p) => p.name && ["Forward", "Defense", "Goaltender"].includes(p.position))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return {
     session: {
       id: r.id,
@@ -79,27 +96,23 @@ async function getBootstrap(env, sessionId) {
       type: r.fields?.["Session Type"] || "",
       opponent: r.fields?.["Opponent / Session"] || "",
     },
+    players,
   };
 }
 
-async function resolvePlayer(env, playerName, role) {
-  const name = String(playerName || "").trim();
-  if (!name) throw new Error("Enter your full name.");
-
-  const formula = `AND({Active}=1,LOWER({Player Name})=LOWER(${JSON.stringify(name)}))`;
-  const query =
-    "?pageSize=2&filterByFormula=" + encodeURIComponent(formula);
-
-  const data = await airtableFetch(env, PLAYERS_TABLE, query);
-  const matches = data.records || [];
-  if (matches.length !== 1) {
-    throw new Error("Player name was not found on the active roster. Enter your name exactly as listed.");
+async function resolvePlayer(env, playerId, role) {
+  if (!/^rec[A-Za-z0-9]{14}$/.test(String(playerId || ""))) {
+    throw new Error("Select your name from the roster.");
   }
 
-  const record = matches[0];
+  const record = await airtableFetch(env, PLAYERS_TABLE, `/${playerId}`);
+  if (!record.fields?.["Active"]) {
+    throw new Error("That player is not currently active on the roster.");
+  }
+
   const rosterRole = record.fields?.["Position"] || "";
   if (rosterRole !== role) {
-    throw new Error(`The selected position does not match the roster for ${record.fields?.["Player Name"] || name}.`);
+    throw new Error(`The selected player is listed as ${rosterRole || "an unknown position"}.`);
   }
 
   return record;
@@ -112,7 +125,7 @@ async function createReview(env, payload) {
   if (!/^rec[A-Za-z0-9]{14}$/.test(sessionId || "")) throw new Error("This form is missing a valid session.");
   if (!["Forward", "Defense", "Goaltender"].includes(role)) throw new Error("Choose a valid role.");
 
-  const player = await resolvePlayer(env, payload?.playerName, role);
+  const player = await resolvePlayer(env, payload?.playerId, role);
 
   const fields = {
     "Player": [player.id],
