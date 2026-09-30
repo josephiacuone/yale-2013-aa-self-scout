@@ -85,6 +85,10 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   letter-spacing:.05em;cursor:pointer;text-transform:uppercase;}
 .submit-btn:disabled{background:#9CA3AF;cursor:default;}
 .submit-btn:active{background:#162d58;}
+.submit-error{display:none;margin-top:10px;padding:10px 12px;border:1px solid #B91C1C;
+  border-left:4px solid #B91C1C;background:#FEF2F2;color:#7F1D1D;border-radius:4px;
+  font-size:12px;font-weight:bold;line-height:1.4;}
+.submit-error.show{display:block;}
 
 /* Confirm screen */
 .confirm-screen{display:none;max-width:640px;margin:40px auto;padding:0 14px;}
@@ -189,6 +193,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
     <div class="field"><textarea id="p-r3" rows="3"></textarea></div>
   </div>
   <button class="submit-btn" onclick="submitPlayer()" id="p-btn">Review & Submit</button>
+  <div class="submit-error" id="p-error" role="alert"></div>
 </div>
 
 <div class="confirm-screen" id="p-confirm">
@@ -245,6 +250,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
     <div class="field"><textarea id="g-r3" rows="3"></textarea></div>
   </div>
   <button class="submit-btn" onclick="submitGoalie()" id="g-btn">Review & Submit</button>
+  <div class="submit-error" id="g-error" role="alert"></div>
 </div>
 
 <div class="confirm-screen" id="g-confirm">
@@ -371,6 +377,21 @@ function toast(msg,dur=3000){
   setTimeout(()=>t.classList.remove("show"),dur);
 }
 
+function showSubmitError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  el.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+function clearSubmitError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = "";
+  el.classList.remove("show");
+}
+
 function getRating(id, qs, pfx) {
   const lines = [];
   qs.forEach((q,i) => {
@@ -490,6 +511,7 @@ async function loadSession() {
 // ── Player submit ─────────────────────────────────────────────────────────────
 async function submitPlayer() {
   const btn = document.getElementById("p-btn");
+  clearSubmitError("p-error");
   const playerId = document.getElementById("p-player").value;
   const role = document.getElementById("p-role").value;
   const playerName = PLAYERS.find(p => p.id === playerId)?.name || "";
@@ -535,6 +557,7 @@ async function submitPlayer() {
     document.getElementById("p-confirm").style.display = "block";
   } catch (err) {
     toast(err.message, 7000);
+    showSubmitError("p-error", err.message);
     btn.disabled = false;
     btn.textContent = "Review & Submit";
   }
@@ -543,6 +566,7 @@ async function submitPlayer() {
 // ── Goalie submit ─────────────────────────────────────────────────────────────
 async function submitGoalie() {
   const btn = document.getElementById("g-btn");
+  clearSubmitError("g-error");
   const playerId = document.getElementById("g-player").value;
   if (!playerId) { toast("Please select your name"); return; }
 
@@ -574,6 +598,7 @@ async function submitGoalie() {
     document.getElementById("g-confirm").style.display = "block";
   } catch (err) {
     toast(err.message, 7000);
+    showSubmitError("g-error", err.message);
     btn.disabled = false;
     btn.textContent = "Review & Submit";
   }
