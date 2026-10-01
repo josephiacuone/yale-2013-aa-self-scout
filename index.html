@@ -200,8 +200,9 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div class="confirm-card">
     <h2>Self-scout saved!</h2>
     <p>Your review has been securely saved to the team database.</p>
-    <div class="email-note" id="p-confirm-note">Thanks for completing your review.</div>
-    <button class="send-btn" onclick="window.location.reload()">Submit another review</button>
+    <div class="email-note" id="p-confirm-note">Your review is also ready to email to Coach Gallini for quick review.</div>
+    <a id="p-mailto-link" href="#" class="send-btn">Email Review to Coach &rarr;</a>
+    <button class="reset-btn" onclick="window.location.reload()">Submit another review</button>
   </div>
 </div>
 </div>
@@ -257,8 +258,9 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div class="confirm-card">
     <h2>Self-scout saved!</h2>
     <p>Your review has been securely saved to the team database.</p>
-    <div class="email-note" id="g-confirm-note">Thanks for completing your review.</div>
-    <button class="send-btn" onclick="window.location.reload()">Submit another review</button>
+    <div class="email-note" id="g-confirm-note">Your review is also ready to email to Coach Gallini for quick review.</div>
+    <a id="g-mailto-link" href="#" class="send-btn">Email Review to Coach &rarr;</a>
+    <button class="reset-btn" onclick="window.location.reload()">Submit another review</button>
   </div>
 </div>
 </div>
@@ -267,6 +269,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 
 <script>
 const API_BASE = "https://yale-self-scout-api.joseph-iacuone.workers.dev";
+const COACH_EMAIL = "brian.gallini@quinnipiac.edu";
 let SESSION_ID = "";
 let SESSION = null;
 let PLAYERS = [];
@@ -417,6 +420,131 @@ function getGoalBlocks() {
     }
   }
   return lines.length ? lines.join("\n") : "  None recorded";
+}
+
+function buildMailto(subject, body) {
+  return `mailto:${COACH_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function sessionOpponent() {
+  return SESSION?.opponent || SESSION?.label || "Session";
+}
+
+function buildPlayerEmail(playerName, role) {
+  const date = SESSION?.date || document.getElementById("p-date").value || "—";
+  const opponent = sessionOpponent();
+  const sessionType = SESSION?.type || document.getElementById("p-session-type").value || "—";
+  const shifts = document.getElementById("p-shifts").value.trim() || "—";
+  const hustle = document.getElementById("p-hustle").value || "—";
+  const load = document.getElementById("p-load").value || "—";
+  const stride = document.getElementById("p-stride").value.trim() || "—";
+  const energy = document.getElementById("p-energy").value || "—";
+  const dataSuggests = document.getElementById("p-data-suggest").value.trim() || "—";
+  const videoSupports = document.querySelector("input[name='p-vs']:checked")?.value || "—";
+  const why = document.getElementById("p-video-why").value.trim() || "—";
+  const didWell = document.getElementById("p-r1").value.trim() || "—";
+  const improveHabit = document.getElementById("p-r2").value.trim() || "—";
+  const nextHabit = document.getElementById("p-r3").value.trim() || "—";
+
+  const roleTitle = role === "Forward" ? "FORWARDS ONLY" : "DEFENSEMEN ONLY";
+  const roleRatings = role === "Forward"
+    ? getRating("p-fwd", PQ.fwd, "p")
+    : getRating("p-def", PQ.def, "p");
+
+  const subject = `[Self-Scout] ${playerName} — ${opponent} — ${date}`;
+  const body = [
+    "YALE 2013 AA — PLAYER SELF-SCOUT",
+    "═══════════════════════════════",
+    `Player:   ${playerName}`,
+    `Role:     ${role}`,
+    `Date:     ${date}`,
+    `Opponent: ${opponent}`,
+    `Shifts:   ${shifts}`,
+    `Session:  ${sessionType}`,
+    "",
+    "HELIOS",
+    "======",
+    `Hustle Score:  ${hustle}`,
+    `Load:          ${load}`,
+    `Stride Time:   ${stride}`,
+    `Energy Ratio:  ${energy}`,
+    `Data suggests: ${dataSuggests}`,
+    `Video supports data? ${videoSupports}`,
+    `Why: ${why}`,
+    "",
+    "GENERAL HABITS",
+    "==============",
+    getRating("p-general", PQ.general, "p"),
+    "",
+    "WITH THE PUCK",
+    "=============",
+    getRating("p-puck", PQ.puck, "p"),
+    "",
+    roleTitle,
+    "=".repeat(roleTitle.length),
+    roleRatings,
+    "",
+    "REFLECTION",
+    "==========",
+    "One thing I did well:",
+    `  ${didWell}`,
+    "",
+    "One habit I want to improve:",
+    `  ${improveHabit}`,
+    "",
+    "Focus for next session:",
+    `  ${nextHabit}`,
+  ].join("\n");
+
+  return buildMailto(subject, body);
+}
+
+function buildGoalieEmail(playerName) {
+  const date = SESSION?.date || document.getElementById("g-date").value || "—";
+  const opponent = sessionOpponent();
+  const periods = document.getElementById("g-periods").value.trim() || "—";
+  const didWell = document.getElementById("g-r1").value.trim() || "—";
+  const improveHabit = document.getElementById("g-r2").value.trim() || "—";
+  const nextHabit = document.getElementById("g-r3").value.trim() || "—";
+
+  const subject = `[Self-Scout] ${playerName} (G) — ${opponent} — ${date}`;
+  const body = [
+    "YALE 2013 AA — GOALTENDER SELF-SCOUT",
+    "═════════════════════════════════════",
+    `Player:   ${playerName}`,
+    `Date:     ${date}`,
+    `Opponent: ${opponent}`,
+    `Periods:  ${periods}`,
+    "",
+    "GENERAL HABITS",
+    "==============",
+    getRating("g-general", GQ.general, "g"),
+    "",
+    "POSITIONING",
+    "===========",
+    getRating("g-pos", GQ.pos, "g"),
+    "",
+    "PUCK MANAGEMENT",
+    "===============",
+    getRating("g-puck", GQ.puck, "g"),
+    "",
+    "GOALS AGAINST",
+    "=============",
+    getGoalBlocks(),
+    "",
+    "REFLECTION",
+    "==========",
+    "One thing I did well:",
+    `  ${didWell}`,
+    "",
+    "One habit I want to improve:",
+    `  ${improveHabit}`,
+    "",
+    "Focus for next session:",
+    `  ${nextHabit}`,
+  ].join("\n");
+
+  return buildMailto(subject, body);
 }
 
 // ── Airtable submission helpers ──────────────────────────────────────────────
@@ -588,6 +716,7 @@ async function submitPlayer() {
   btn.textContent = "Saving...";
   try {
     await api("/submit", {method:"POST", body:JSON.stringify(payload)});
+    document.getElementById("p-mailto-link").href = buildPlayerEmail(playerName, role);
     document.getElementById("p-form").classList.add("hidden");
     document.getElementById("p-confirm").style.display = "block";
   } catch (err) {
@@ -603,6 +732,7 @@ async function submitGoalie() {
   const btn = document.getElementById("g-btn");
   clearSubmitError("g-error");
   const playerId = document.getElementById("g-player").value;
+  const playerName = PLAYERS.find(p => p.id === playerId)?.name || "";
   if (!playerId) { toast("Please select your name"); return; }
 
   const ratings = {
@@ -629,6 +759,7 @@ async function submitGoalie() {
   btn.textContent = "Saving...";
   try {
     await api("/submit", {method:"POST", body:JSON.stringify(payload)});
+    document.getElementById("g-mailto-link").href = buildGoalieEmail(playerName);
     document.getElementById("g-form").classList.add("hidden");
     document.getElementById("g-confirm").style.display = "block";
   } catch (err) {
