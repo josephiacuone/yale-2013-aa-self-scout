@@ -498,7 +498,7 @@ async function loadSessions() {
     const optionHtml = [
       '<option value="">Select a session...</option>',
       ...SESSIONS.map(s =>
-        `<option value="${s.id}">${s.date} — ${s.label || s.opponent || s.type}</option>`
+        `<option value="${s.id}">${s.label || s.opponent || s.type}</option>`
       )
     ].join("");
 
