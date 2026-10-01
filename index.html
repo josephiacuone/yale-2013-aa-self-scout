@@ -135,7 +135,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
     <div class="field"><label>Your Name</label><select id="p-player"><option value="">Loading roster...</option></select></div>
     <div class="field"><label>Position</label><input type="text" id="p-role" readonly placeholder="Select your name"></div>
     <div class="field"><label>Date</label><input type="text" id="p-date" readonly></div>
-    <div class="field"><label>Opponent / Session</label><input type="text" id="p-opponent" readonly></div>
+    <div class="field"><label>Session</label><select id="p-session"><option value="">Loading sessions...</option></select></div>
     <div class="field" style="grid-column:1/-1"><label>Shifts / Period Reviewed</label><input type="text" id="p-shifts" placeholder="e.g. P1, shifts 3-5"></div>
   </div>
 
@@ -212,7 +212,7 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div class="info-grid">
     <div class="field"><label>Your Name</label><select id="g-player"><option value="">Loading roster...</option></select></div>
     <div class="field"><label>Date</label><input type="text" id="g-date" readonly></div>
-    <div class="field"><label>Opponent / Session</label><input type="text" id="g-opponent" readonly></div>
+    <div class="field"><label>Session</label><select id="g-session"><option value="">Loading sessions...</option></select></div>
     <div class="field"><label>Period(s) Reviewed</label><input type="text" id="g-periods" placeholder="e.g. P1, P2"></div>
   </div>
 
@@ -267,10 +267,11 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 
 <script>
 const API_BASE = "https://yale-self-scout-api.joseph-iacuone.workers.dev";
-const SESSION_ID = new URLSearchParams(window.location.search).get("session") || "";
+let SESSION_ID = "";
 let SESSION = null;
 let PLAYERS = [];
-
+let SESSIONS = [];
+  
 const PQ = {
   general:[
     "Did I move quickly after possession changed?",
@@ -486,21 +487,55 @@ function populatePlayerLists() {
   });
 }
 
-async function loadSession() {
-  if (!SESSION_ID) {
-    document.getElementById("p-btn").disabled = true;
-    document.getElementById("g-btn").disabled = true;
-    toast("This link is missing its session. Please use the session-specific link.", 7000);
-    return;
-  }
+async function loadSessions() {
   try {
-    const data = await api("/bootstrap?session=" + encodeURIComponent(SESSION_ID));
-    SESSION = data.session;
-    PLAYERS = data.players || [];
-    populatePlayerLists();
-    ["p-date","g-date"].forEach(id => document.getElementById(id).value = SESSION?.date || "");
-    ["p-opponent","g-opponent"].forEach(id => document.getElementById(id).value = SESSION?.opponent || SESSION?.label || "");
-    document.getElementById("p-session-type").value = SESSION?.type || "";
+    const sessionData = await api("/sessions");
+    SESSIONS = sessionData.sessions || [];
+
+    const playerSession = document.getElementById("p-session");
+    const goalieSession = document.getElementById("g-session");
+
+    const optionHtml = [
+      '<option value="">Select a session...</option>',
+      ...SESSIONS.map(s =>
+        `<option value="${s.id}">${s.date} — ${s.label || s.opponent || s.type}</option>`
+      )
+    ].join("");
+
+    playerSession.innerHTML = optionHtml;
+    goalieSession.innerHTML = optionHtml;
+
+    async function chooseSession(sessionId) {
+      SESSION_ID = sessionId;
+      SESSION = SESSIONS.find(s => s.id === sessionId) || null;
+
+      if (!SESSION) return;
+
+      const data = await api(
+        "/bootstrap?session=" + encodeURIComponent(SESSION_ID)
+      );
+
+      PLAYERS = data.players || [];
+      populatePlayerLists();
+
+      ["p-date","g-date"].forEach(
+        id => document.getElementById(id).value = SESSION.date || ""
+      );
+
+      document.getElementById("p-session-type").value =
+        SESSION.type || "";
+    }
+
+    playerSession.addEventListener("change", e => {
+      chooseSession(e.target.value);
+      goalieSession.value = e.target.value;
+    });
+
+    goalieSession.addEventListener("change", e => {
+      chooseSession(e.target.value);
+      playerSession.value = e.target.value;
+    });
+
   } catch (err) {
     document.getElementById("p-btn").disabled = true;
     document.getElementById("g-btn").disabled = true;
@@ -616,7 +651,7 @@ async function submitGoalie() {
   buildGoals();
   document.getElementById("p-role").addEventListener("change", setPositionVisibility);
   setPositionVisibility();
-  loadSession();
+  loadSessions();
 })();
 </script>
 </body>
