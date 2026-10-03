@@ -132,10 +132,10 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-player">
 <div class="form-wrap" id="p-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><select id="p-player"><option value="">Loading roster...</option></select></div>
+    <div class="field"><label for="p-session">Session — select first</label><select id="p-session"><option value="">Loading sessions...</option></select></div>
+    <div class="field"><label>Your Name</label><select id="p-player"><option value="">Select a session first...</option></select></div>
     <div class="field"><label>Position</label><input type="text" id="p-role" readonly placeholder="Select your name"></div>
     <div class="field"><label>Date</label><input type="text" id="p-date" readonly></div>
-    <div class="field"><label>Session</label><select id="p-session"><option value="">Loading sessions...</option></select></div>
     <div class="field" style="grid-column:1/-1"><label>Shifts / Period Reviewed</label><input type="text" id="p-shifts" placeholder="e.g. P1, shifts 3-5"></div>
   </div>
 
@@ -211,9 +211,9 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
 <div id="tab-goalie" class="hidden">
 <div class="form-wrap" id="g-form">
   <div class="info-grid">
-    <div class="field"><label>Your Name</label><select id="g-player"><option value="">Loading roster...</option></select></div>
+    <div class="field"><label for="g-session">Session — select first</label><select id="g-session"><option value="">Loading sessions...</option></select></div>
+    <div class="field"><label>Your Name</label><select id="g-player"><option value="">Select a session first...</option></select></div>
     <div class="field"><label>Date</label><input type="text" id="g-date" readonly></div>
-    <div class="field"><label>Session</label><select id="g-session"><option value="">Loading sessions...</option></select></div>
     <div class="field"><label>Period(s) Reviewed</label><input type="text" id="g-periods" placeholder="e.g. P1, P2"></div>
   </div>
 
