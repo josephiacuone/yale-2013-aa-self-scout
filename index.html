@@ -180,8 +180,6 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div style="background:#fff;border:1px solid var(--border);padding:12px;">
     <div class="refl-label">One thing I did well</div>
     <div class="field"><textarea id="p-r1" rows="3"></textarea></div>
-    <div class="refl-label">One habit I want to improve</div>
-    <div class="field"><textarea id="p-r2" rows="3"></textarea></div>
     <div class="refl-label">One thing I will focus on in my next practice or game</div>
     <div class="field"><textarea id="p-r3" rows="3"></textarea></div>
   </div>
@@ -237,8 +235,6 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div style="background:#fff;border:1px solid var(--border);padding:12px;">
     <div class="refl-label">One thing I did well</div>
     <div class="field"><textarea id="g-r1" rows="3"></textarea></div>
-    <div class="refl-label">One habit I want to improve</div>
-    <div class="field"><textarea id="g-r2" rows="3"></textarea></div>
     <div class="refl-label">One thing I will focus on in my next practice or game</div>
     <div class="field"><textarea id="g-r3" rows="3"></textarea></div>
   </div>
@@ -414,7 +410,6 @@ function submitPlayer() {
   const vs      = document.querySelector("input[name=\'p-vs\']:checked")?.value || "—";
   const vsWhy   = document.getElementById("p-video-why").value || "—";
   const r1      = document.getElementById("p-r1").value || "—";
-  const r2      = document.getElementById("p-r2").value || "—";
   const r3      = document.getElementById("p-r3").value || "—";
 
   const subject = `[Self-Scout] ${player} — ${opp} — ${date}`;
@@ -467,9 +462,6 @@ getRating("p-def", PQ.def, "p"),
     `One thing I did well:`,
     `  ${r1}`,
     "",
-    `One habit I want to improve:`,
-    `  ${r2}`,
-    "",
     `Focus for next session:`,
     `  ${r3}`,
   ].join("\n");
@@ -493,7 +485,6 @@ function submitGoalie() {
   const opp     = document.getElementById("g-opponent").value || "—";
   const periods = document.getElementById("g-periods").value || "—";
   const r1      = document.getElementById("g-r1").value || "—";
-  const r2      = document.getElementById("g-r2").value || "—";
   const r3      = document.getElementById("g-r3").value || "—";
 
   const subject = `[Self-Scout] ${player} (G) — ${opp} — ${date}`;
@@ -520,9 +511,6 @@ function submitGoalie() {
     "── REFLECTION ──────────────────",
     `One thing I did well:`,
     `  ${r1}`,
-    "",
-    `One habit I want to improve:`,
-    `  ${r2}`,
     "",
     `Focus for next session:`,
     `  ${r3}`,
