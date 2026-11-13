@@ -187,8 +187,6 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div style="background:#fff;border:1px solid var(--border);padding:12px;">
     <div class="refl-label">One thing I did well</div>
     <div class="field"><textarea id="p-r1" rows="3"></textarea></div>
-    <div class="refl-label">One habit I want to improve</div>
-    <div class="field"><textarea id="p-r2" rows="3"></textarea></div>
     <div class="refl-label">One thing I will focus on in my next practice or game</div>
     <div class="field"><textarea id="p-r3" rows="3"></textarea></div>
   </div>
@@ -245,8 +243,6 @@ body{font-family:Arial,sans-serif;background:var(--offwht);color:#111;min-height
   <div style="background:#fff;border:1px solid var(--border);padding:12px;">
     <div class="refl-label">One thing I did well</div>
     <div class="field"><textarea id="g-r1" rows="3"></textarea></div>
-    <div class="refl-label">One habit I want to improve</div>
-    <div class="field"><textarea id="g-r2" rows="3"></textarea></div>
     <div class="refl-label">One thing I will focus on in my next practice or game</div>
     <div class="field"><textarea id="g-r3" rows="3"></textarea></div>
   </div>
@@ -443,7 +439,6 @@ function buildPlayerEmail(playerName, role) {
   const videoSupports = document.querySelector("input[name='p-vs']:checked")?.value || "—";
   const why = document.getElementById("p-video-why").value.trim() || "—";
   const didWell = document.getElementById("p-r1").value.trim() || "—";
-  const improveHabit = document.getElementById("p-r2").value.trim() || "—";
   const nextHabit = document.getElementById("p-r3").value.trim() || "—";
 
   const roleTitle = role === "Forward" ? "FORWARDS ONLY" : "DEFENSEMEN ONLY";
@@ -489,9 +484,6 @@ function buildPlayerEmail(playerName, role) {
     "One thing I did well:",
     `  ${didWell}`,
     "",
-    "One habit I want to improve:",
-    `  ${improveHabit}`,
-    "",
     "Focus for next session:",
     `  ${nextHabit}`,
   ].join("\n");
@@ -504,7 +496,6 @@ function buildGoalieEmail(playerName) {
   const opponent = sessionOpponent();
   const periods = document.getElementById("g-periods").value.trim() || "—";
   const didWell = document.getElementById("g-r1").value.trim() || "—";
-  const improveHabit = document.getElementById("g-r2").value.trim() || "—";
   const nextHabit = document.getElementById("g-r3").value.trim() || "—";
 
   const subject = `[Self-Scout] ${playerName} (G) — ${opponent} — ${date}`;
@@ -536,9 +527,6 @@ function buildGoalieEmail(playerName) {
     "==========",
     "One thing I did well:",
     `  ${didWell}`,
-    "",
-    "One habit I want to improve:",
-    `  ${improveHabit}`,
     "",
     "Focus for next session:",
     `  ${nextHabit}`,
@@ -707,7 +695,7 @@ async function submitPlayer() {
     ratings,
     reflection: {
       didWell: document.getElementById("p-r1").value.trim(),
-      improveHabit: document.getElementById("p-r2").value.trim(),
+      improveHabit: "",
       nextHabit: document.getElementById("p-r3").value.trim(),
     },
   };
@@ -750,7 +738,7 @@ async function submitGoalie() {
     goals: collectGoalPayload(),
     reflection: {
       didWell: document.getElementById("g-r1").value.trim(),
-      improveHabit: document.getElementById("g-r2").value.trim(),
+      improveHabit: "",
       nextHabit: document.getElementById("g-r3").value.trim(),
     },
   };
